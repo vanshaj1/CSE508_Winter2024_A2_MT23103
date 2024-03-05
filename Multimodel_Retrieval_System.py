@@ -357,6 +357,7 @@ def reading_CSV():
             product["image_review"] = line[2]
             product["images_score"] = []
             product["text_score"] = 0
+            product["composite_score"] = 0
             products.append(product)
             # print(product)
 
@@ -375,6 +376,45 @@ def fill_images_feature_data():
             feature = get_image_features(pre_processed_img)
             image["image_features"] = feature
             images.append(image)
+
+
+def ranking_based_composite_score(ranked_ids_image,ranked_ids_text):
+    composite_score_ids = {}
+    ranked_results = []
+
+    for id in ranked_ids_image:
+        for product in products:
+            if product["id"] == id:
+                composite_score = product["images_score"][0] + product["text_score"]
+                composite_score_ids[id] = composite_score
+                product["composite_score"] = composite_score
+    
+    for id in ranked_ids_text:
+        for product in products:
+            if product["id"] == id:
+                composite_score = product["images_score"][0] + product["text_score"]
+                composite_score_ids[id] = composite_score
+                product["composite_score"] = composite_score
+
+    composite_score_ids_d  = OrderedDict(sorted(composite_score_ids.items(), key=lambda item: item[1], reverse=True))
+
+    for key in composite_score_ids_d:
+        ranked_results.append(key)
+    
+    return ranked_results
+
+
+def load_data_from_file(filename):
+    file_data = open(filename, 'rb')
+    data = pickle.load(file_data)
+    file_data.close()
+    return data
+
+def save_data_to_file(filename, data):
+    data_file= open(filename, 'wb')
+    pickle.dump(data, data_file)  
+    data_file.close()
+
 
 
 def mainProcess():
@@ -416,9 +456,7 @@ def mainProcess():
     # pickle.dump(tf_idf, tf_idf_data_file)  
     # tf_idf_data_file.close()
 
-    tf_idf_Data = open('IF_IDF', 'rb')
-    tf_idf = pickle.load(tf_idf_Data)
-    tf_idf_Data.close()
+    tf_idf = load_data_from_file('IF_IDF')
 
     global images
     images_features_data = open('image_features', 'rb')
@@ -441,6 +479,20 @@ def mainProcess():
     # print(query_tf_idf)
 
     ranked_ids_image = ranking_basis_cosine_similarity_image(query_img_feature)
+    ranked_ids_text = ranking_basis_cosine_similarity_text(tf_idf,query_tf_idf)
+    ranked_ids_composite = ranking_based_composite_score(ranked_ids_image,ranked_ids_text)
+
+    
+    save_data_to_file("ranked_id_images",ranked_ids_image)
+    save_data_to_file("ranked_ids_text",ranked_ids_text)
+    save_data_to_file("ranked_ids_composite",ranked_ids_composite)
+
+    ranked_ids_image = load_data_from_file("ranked_id_images")
+    ranked_ids_text = load_data_from_file("ranked_ids_text")
+    ranked_ids_composite = load_data_from_file("ranked_ids_composite")
+    
+
+
     print("USING IMAGE RETRIEVAL:- ")
     for id in ranked_ids_image:
         for product in products:
@@ -451,7 +503,6 @@ def mainProcess():
                 print("Cosine similarity of text: "+ str(product["text_score"]))
                 print("\n")
 
-    ranked_ids_text = ranking_basis_cosine_similarity_text(tf_idf,query_tf_idf)
     print("USING TEXT RETRIEVAL:- ")
     for id in ranked_ids_text:
         for product in products:
@@ -462,6 +513,16 @@ def mainProcess():
                 print("Cosine similarity of text: "+ str(product["text_score"]))
                 print("\n")
 
+    print("USING COMPOSITE RANK RETRIEVAL:- ")
+    for id in ranked_ids_composite:
+        for product in products:
+            if id == product["id"]:
+                print("Image URL: " + str(product["image_url"]))
+                print("Review: "+ str(product["image_review"]))
+                print("Cosine similarity of images: "+ str(product["images_score"]))
+                print("Cosine similarity of text: "+ str(product["text_score"]))
+                print("Composite score: "+ str(product["composite_score"]))
+                print("\n")
 
 mainProcess()
 
