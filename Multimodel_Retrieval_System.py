@@ -28,6 +28,7 @@ nltk.download('punkt')
 nltk.download('wordnet')
 nltk.download('stopwords')
 from sklearn.preprocessing import normalize
+import statistics
 #****************** Data Structure *********************
 # Array of Dictionaries
 
@@ -385,14 +386,14 @@ def ranking_based_composite_score(ranked_ids_image,ranked_ids_text):
     for id in ranked_ids_image:
         for product in products:
             if product["id"] == id:
-                composite_score = product["images_score"][0] + product["text_score"]
+                composite_score = (product["images_score"][0] + product["text_score"]) / 2
                 composite_score_ids[id] = composite_score
                 product["composite_score"] = composite_score
     
     for id in ranked_ids_text:
         for product in products:
             if product["id"] == id:
-                composite_score = product["images_score"][0] + product["text_score"]
+                composite_score = (product["images_score"][0] + product["text_score"]) / 2
                 composite_score_ids[id] = composite_score
                 product["composite_score"] = composite_score
 
@@ -499,8 +500,9 @@ def mainProcess():
             if id == product["id"]:
                 print("Image URL: " + str(product["image_url"]))
                 print("Review: "+ str(product["image_review"]))
-                print("Cosine similarity of images: "+ str(product["images_score"]))
+                print("Cosine similarity of images: "+ str(product["images_score"][0]))
                 print("Cosine similarity of text: "+ str(product["text_score"]))
+                print("Composite score: "+ str(product["composite_score"]))
                 print("\n")
 
     print("USING TEXT RETRIEVAL:- ")
@@ -510,7 +512,10 @@ def mainProcess():
                 print("Image URL: " + str(product["image_url"]))
                 print("Review: "+ str(product["image_review"]))
                 print("Cosine similarity of images: "+ str(product["images_score"]))
+                print("Cosine similarity of images Average of URLs: "+ str(statistics.mean(product["images_score"])))
+                print("Cosine similarity of image used in composite similarity: "+ str(product["images_score"][0]))
                 print("Cosine similarity of text: "+ str(product["text_score"]))
+                print("Composite score: "+ str(product["composite_score"]))
                 print("\n")
 
     print("USING COMPOSITE RANK RETRIEVAL:- ")
@@ -520,6 +525,8 @@ def mainProcess():
                 print("Image URL: " + str(product["image_url"]))
                 print("Review: "+ str(product["image_review"]))
                 print("Cosine similarity of images: "+ str(product["images_score"]))
+                print("Cosine similarity of images Average of URLs: "+ str(statistics.mean(product["images_score"])))
+                print("Cosine similarity of image used in composite similarity: "+ str(product["images_score"][0]))
                 print("Cosine similarity of text: "+ str(product["text_score"]))
                 print("Composite score: "+ str(product["composite_score"]))
                 print("\n")
