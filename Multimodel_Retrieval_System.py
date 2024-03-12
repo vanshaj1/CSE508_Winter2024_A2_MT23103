@@ -328,6 +328,7 @@ def ranking_basis_cosine_similarity_image(query_features):
                 product_temp = product
                 break
         product_temp["images_score"].append(image["image_score"])
+        product_temp["image_ranked_urls"].append(image["image_url"])
 
 
     i = 0
@@ -355,6 +356,7 @@ def reading_CSV():
             product = {}
             product["id"] = line[0]
             product["image_url"] = line[1].strip('][').split(', ')
+            product["image_ranked_urls"] = []
             product["image_review"] = line[2]
             product["images_score"] = []
             product["text_score"] = 0
@@ -368,7 +370,7 @@ def fill_images_feature_data():
         for url in product["image_url"]:
             image = {}
             image["id"] = product["id"]
-            image["image_url"] = product["image_url"]
+            image["image_url"] = url
             print(url)
             url = url[1:len(url)-1]
             pre_processed_img = image_pre_processing(url)
@@ -393,7 +395,7 @@ def ranking_based_composite_score(ranked_ids_image,ranked_ids_text):
     for id in ranked_ids_text:
         for product in products:
             if product["id"] == id:
-                composite_score = (product["images_score"][0] + product["text_score"]) / 2
+                composite_score = (statistics.mean(product["images_score"]) + product["text_score"]) / 2
                 composite_score_ids[id] = composite_score
                 product["composite_score"] = composite_score
 
@@ -433,7 +435,7 @@ def mainProcess():
     #************************************************************************************
 
     # print(images)
-    # image_feature_data_file = open('image_features', 'wb')
+    # image_feature_data_file = open('image_features_V1', 'wb')
     # pickle.dump(images, image_feature_data_file)  
     # image_feature_data_file.close()
 
@@ -460,7 +462,7 @@ def mainProcess():
     tf_idf = load_data_from_file('IF_IDF')
 
     global images
-    images_features_data = open('image_features', 'rb')
+    images_features_data = open('image_features_V1', 'rb')
     images = pickle.load(images_features_data)
     images_features_data.close()
 
@@ -472,12 +474,8 @@ def mainProcess():
     query_img_feature = get_image_features(query_pre_processed_img)
 
     query_review_doc = text_pre_processing(query_review)
-    # print("1.",query_review_doc)
-    # query_term_list = unique_terms_Query(query_review_doc)
     query_tf = term_frequency_Query(query_review_doc,terms_list)
-    # query_idf = Inverse_Document_Frequency_Query(documents,query_term_list,terms_list)
     query_tf_idf = TF_IDF_QUERY(query_tf,idf,terms_list)
-    # print(query_tf_idf)
 
     ranked_ids_image = ranking_basis_cosine_similarity_image(query_img_feature)
     ranked_ids_text = ranking_basis_cosine_similarity_text(tf_idf,query_tf_idf)
@@ -499,6 +497,7 @@ def mainProcess():
         for product in products:
             if id == product["id"]:
                 print("Image URL: " + str(product["image_url"]))
+                print("Image Ranked URL: "+ str(product["image_ranked_urls"]))
                 print("Review: "+ str(product["image_review"]))
                 print("Cosine similarity of images: "+ str(product["images_score"][0]))
                 print("Cosine similarity of text: "+ str(product["text_score"]))
@@ -510,10 +509,11 @@ def mainProcess():
         for product in products:
             if id == product["id"]:
                 print("Image URL: " + str(product["image_url"]))
+                print("Image Ranked URL: "+ str(product["image_ranked_urls"]))
                 print("Review: "+ str(product["image_review"]))
                 print("Cosine similarity of images: "+ str(product["images_score"]))
                 print("Cosine similarity of images Average of URLs: "+ str(statistics.mean(product["images_score"])))
-                print("Cosine similarity of image used in composite similarity: "+ str(product["images_score"][0]))
+                print("Cosine similarity of image used in composite similarity: "+ str(statistics.mean(product["images_score"])))
                 print("Cosine similarity of text: "+ str(product["text_score"]))
                 print("Composite score: "+ str(product["composite_score"]))
                 print("\n")
@@ -523,10 +523,12 @@ def mainProcess():
         for product in products:
             if id == product["id"]:
                 print("Image URL: " + str(product["image_url"]))
+                print("Image Ranked URL: "+ str(product["image_ranked_urls"]))
                 print("Review: "+ str(product["image_review"]))
                 print("Cosine similarity of images: "+ str(product["images_score"]))
                 print("Cosine similarity of images Average of URLs: "+ str(statistics.mean(product["images_score"])))
-                print("Cosine similarity of image used in composite similarity: "+ str(product["images_score"][0]))
+                print("Cosine similarity of image used in composite similarity, if it is the result of image based retrieval: "+ str(product["images_score"][0]))
+                print("Cosine similarity of image used in composite similarity, if it is the result of text based retrieval: "+ str(statistics.mean(product["images_score"])))
                 print("Cosine similarity of text: "+ str(product["text_score"]))
                 print("Composite score: "+ str(product["composite_score"]))
                 print("\n")
