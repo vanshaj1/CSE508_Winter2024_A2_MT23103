@@ -221,6 +221,27 @@ def TF_IDF(term_doc_matrix,IDF,noOfDocuments, terms_list):
 
 
 #*************************** Cosine similarity ***************************
+# custom made cosine similarity
+def customCosineSimilarity(vector1,vector2):
+    v1 = vector1[0]
+    v2 = vector2[0]
+    if(len(v1) != len(v2)):
+        return None
+    
+    product = np.dot(v1,v2)
+
+    square_sum_vector_1 = 0
+    for val in v1:
+        square_sum_vector_1 += (val**2)
+
+    square_sum_vector_2 = 0
+    for val in v2:
+        square_sum_vector_2 += (val**2)
+
+    product_of_sqrt_square_sums_roots = np.sqrt(square_sum_vector_1) * np.sqrt(square_sum_vector_2)
+
+    result = product/product_of_sqrt_square_sums_roots
+    return result
 
 #**************** Text cosine similarity *******************
 def unique_terms_Query(document):
@@ -279,8 +300,8 @@ def TF_IDF_QUERY(tf,IDF, terms_list):
 
 
 def compute_cosine_similarity(Query,Doc):
-    score = cosine_similarity(Query, Doc)
-    return score[0][0]
+    return customCosineSimilarity(Query, Doc)
+    
 
 def ranking_basis_cosine_similarity_text(tf_idf_d,tf_idf_q):
     cosine_similarity_dict = {}
