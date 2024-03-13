@@ -53,7 +53,7 @@ images = []
 
 #************************ Image pre processing *****************
 def image_pre_processing(url):
-    # loading image
+    
     data = requests.get(url).content 
     image_name = url.split("/")[-1:]
     f = open('images/'+ str(image_name[0]),'wb') 
@@ -67,24 +67,23 @@ def image_pre_processing(url):
         return None
 
 
-    # Convert BGR image to RGB
+    # BGR image to RGB
     image_rgb = cv2.cvtColor(image_Matrix, cv2.COLOR_BGR2RGB)
 
-    # Image rotation parameter
     center = (image_rgb.shape[1] // 2, image_rgb.shape[0] // 2)
     angle = 30
     scale = 1
     
-    # getRotationMatrix2D creates a matrix needed for transformation.
+    # geometic orientation
     rotation_matrix = cv2.getRotationMatrix2D(center, angle, scale)
     
-    # We want matrix for rotation w.r.t center to 30 degree without scaling.
+    # geometic orientation
     image = cv2.warpAffine(image_rgb, rotation_matrix, (image_Matrix.shape[1], image_Matrix.shape[0]))
 
-    # brighten the image
+    # brightness and exposure
     image = adjust_gamma(image,gamma=0.5,gain=1)
 
-    # Resize image
+    # resizing
     image = cv2.resize(image, (224, 224) )
     image = image.reshape(1,224,224,3)
 
